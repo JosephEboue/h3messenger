@@ -1,22 +1,33 @@
 package com.example.pages
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pages.viewModels.HomeViewModel
+import com.example.pages.viewModels.LoginViewModel
+import com.example.pages.viewModels.NavigatorViewModel
 
 @Composable
-fun Navigator(){
-    val currentPage = remember { mutableStateOf("login") }
-    val currentUser = remember { mutableStateOf("home") }
-    when(currentPage.value){
-        "login" -> LoginPage(){currentPage.value="home"}
+fun Navigator() {
+    val viewModel: NavigatorViewModel = viewModel()
+    val navigationState by viewModel.navigationState.collectAsState()
+
+    when (navigationState.currentPage) {
+        "login" -> LoginPage(
+            viewModel = LoginViewModel()
+        ) {
+            viewModel.navigateTo("home")
+        }
         "home" -> HomePage(
-            onBackPressed = {currentPage.value="login"},
-            onDiscClicked = {user ->
-                currentPage.value="Discussion"
-                currentUser.value = user
+            onBackPressed = { viewModel.navigateTo("login") },
+            viewModel = HomeViewModel(),
+            onDiscClicked = { user ->
+                viewModel.navigateTo("Discussion", user)
             }
         )
-        "Discussion" -> Discussion(currentUser.value){currentPage.value="home"}
+        "Discussion" -> Discussion(navigationState.currentUser) {
+            viewModel.navigateTo("home")
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.h3messenger
 
 import android.os.Bundle
 import android.provider.Telephony.Sms.Conversations
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.OptIn
@@ -33,14 +34,44 @@ import com.example.h3messenger.ui.theme.H3messengerTheme
 import com.example.pages.HomePage
 import com.example.pages.LoginPage
 import com.example.pages.Navigator
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import java.time.chrono.ChronoLocalDateTime
 import java.util.Date
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 
 class MainActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
+    private lateinit var authStateListener: AuthStateListener
+    override fun onStart() {
+        super.onStart()
+        auth.addAuthStateListener { authStateListener }
+        auth.signInAnonymously()
+            .addOnCompleteListener (this) { task ->
+                if (!task.isSuccessful){
+                    Toast.makeText(
+                        baseContext,
+                        "Authentification failed.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+    }
+    override fun onStop() {
+        super.onStop()
+        auth.removeAuthStateListener { authStateListener }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+        auth = FirebaseAuth.getInstance()
+        // Initialize Firebase
+        //FirebaseApp.initializeApp(this)
+        authStateListener = AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+        }
         setContent {
             H3messengerTheme {
                 // A surface container using the 'background' color from the theme
